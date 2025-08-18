@@ -1,4 +1,4 @@
-.PHONY: generate
+.PHONY: generate migrate-up migrate-down
 generate:
 	@echo "Generating OpenAPI"
 
@@ -21,3 +21,16 @@ generate:
 		./api/openapi/swagger.yaml
 
 	@echo "Done!"
+
+MIGRATION_URI = "postgres://postgres:postgres@localhost:5432/pvz?sslmode=disable"
+migration-up:
+	migrate \
+		-path ./migrations \
+		-database $(MIGRATION_URI) \
+		up
+
+migration-down:
+	migrate \
+		-path ./migrations \
+		-database $(MIGRATION_URI) \
+		down
