@@ -1,0 +1,13 @@
+http_server:
+  port: "8080"
+  jwt_secret: "strong"
+
+grpc:
+  port: "3000"
+
+database:
+  host: "db"
+  port: "5432"
+  username: "postgres"
+  password: "postgres"
+  basename: "pvz"
