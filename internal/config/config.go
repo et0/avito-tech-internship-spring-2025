@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -30,22 +30,22 @@ type Database struct {
 	Password string `yaml:"password"`
 }
 
-func Load() *Config {
+func Load() (*Config, error) {
 	configPath, exists := os.LookupEnv("CONFIG_PATH")
 	if !exists || configPath == "" {
-		log.Fatalf("env CONFIG_PATH is not set")
+		return nil, fmt.Errorf("env CONFIG_PATH is not set")
 	}
 
 	cfg := &Config{}
 
 	file, err := os.ReadFile(configPath)
 	if err != nil {
-		log.Fatalf("failed to read config file: %s", err)
+		return nil, fmt.Errorf("failed to read config file: %s", err)
 	}
 
 	if err := yaml.Unmarshal(file, cfg); err != nil {
-		log.Fatalf("failed to parse config file: %s", err)
+		return nil, fmt.Errorf("failed to parse config file: %s", err)
 	}
 
-	return cfg
+	return cfg, nil
 }
