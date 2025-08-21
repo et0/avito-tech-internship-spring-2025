@@ -1,7 +1,12 @@
 package service
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/repository/postgres"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserService struct {
@@ -11,4 +16,22 @@ type UserService struct {
 
 func NewUserService(db *postgres.Postgres, jwtSecret []byte) *UserService {
 	return &UserService{db, jwtSecret}
+}
+
+func (uS *UserService) CreateToken(role model.UserRole) (string, error) {
+	if role != model.RoleEmployee && role != model.RoleModerator {
+		return "", fmt.Errorf("Role must be 'employee' or 'moderator'")
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"role": role,
+		"exp":  time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	tokenString, err := token.SignedString(uS.jwtSecret)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate token")
+	}
+
+	return tokenString, nil
 }
