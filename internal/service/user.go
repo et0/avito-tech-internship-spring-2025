@@ -9,16 +9,20 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type UserService struct {
+type UserService interface {
+	CreateToken(role model.UserRole) (string, error)
+}
+
+type userService struct {
 	db        *postgres.Postgres
 	jwtSecret []byte
 }
 
-func NewUserService(db *postgres.Postgres, jwtSecret []byte) *UserService {
-	return &UserService{db, jwtSecret}
+func NewUserService(db *postgres.Postgres, jwtSecret []byte) *userService {
+	return &userService{db, jwtSecret}
 }
 
-func (uS *UserService) CreateToken(role model.UserRole) (string, error) {
+func (uS *userService) CreateToken(role model.UserRole) (string, error) {
 	if role != model.RoleEmployee && role != model.RoleModerator {
 		return "", fmt.Errorf("Role must be 'employee' or 'moderator'")
 	}
