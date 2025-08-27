@@ -30,6 +30,10 @@ func (uc *UserHandler) DummyLogin(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
 	}
 
+	if request.Role == "" {
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Role is required"})
+	}
+
 	if request.Role != openapi.PostDummyLoginJSONBodyRoleEmployee && request.Role != openapi.PostDummyLoginJSONBodyRoleModerator {
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Role must be 'employee' or 'moderator'"})
 	}
