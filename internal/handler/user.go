@@ -10,14 +10,14 @@ import (
 )
 
 type UserHandler struct {
-	service *service.UserService
+	service service.UserService
 }
 
 type UserDummyLoginResponse struct {
 	Token openapi.Token `json:"token"`
 }
 
-func NewUserHandler(sUS *service.UserService) *UserHandler {
+func NewUserHandler(sUS service.UserService) *UserHandler {
 	return &UserHandler{
 		service: sUS,
 	}
