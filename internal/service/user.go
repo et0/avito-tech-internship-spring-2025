@@ -23,10 +23,6 @@ func NewUserService(db *postgres.Postgres, jwtSecret []byte) *userService {
 }
 
 func (uS *userService) CreateToken(role model.UserRole) (string, error) {
-	if role != model.RoleEmployee && role != model.RoleModerator {
-		return "", fmt.Errorf("Role must be 'employee' or 'moderator'")
-	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"role": role,
 		"exp":  time.Now().Add(time.Hour * 24).Unix(),
