@@ -27,5 +27,5 @@ func (p *Postgres) FindByEmail(email string) (*model.User, error) {
 		return nil, err
 	}
 
-	return &user, err
+	return &user, nil
 }
