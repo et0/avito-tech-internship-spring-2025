@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
-	"github.com/et0/avito-tech-internship-spring-2025/internal/repository/postgres"
+	"github.com/et0/avito-tech-internship-spring-2025/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -14,11 +14,11 @@ type UserService interface {
 }
 
 type userService struct {
-	db        *postgres.Postgres
+	db        repository.Database
 	jwtSecret []byte
 }
 
-func NewUserService(db *postgres.Postgres, jwtSecret []byte) *userService {
+func NewUserService(db repository.Database, jwtSecret []byte) *userService {
 	return &userService{db, jwtSecret}
 }
 
