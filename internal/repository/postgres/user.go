@@ -29,3 +29,26 @@ func (p *Postgres) FindByEmail(email string) (*model.User, error) {
 
 	return &user, nil
 }
+
+func (p *Postgres) CreateUser(email, password string, role model.UserRole) (*model.User, error) {
+	conn, err := p.Pool.Acquire(context.Background())
+	if err != nil {
+		log.Fatal("DB connect failed:", err)
+	}
+	defer conn.Release()
+
+	_, err = conn.Exec(context.Background(),
+		"INSERT INTO users (email, password, role) VALUES ($1, $2, $3)",
+		email, password, role,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := p.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
