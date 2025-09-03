@@ -21,6 +21,7 @@ func New(log *slog.Logger, db repository.Database, jwtSecret []byte) *echo.Echo 
 	userHandler := NewUserHandler(userService, log)
 
 	e.POST("/dummyLogin", userHandler.DummyLogin)
+	e.POST("/register", userHandler.Register)
 
 	return e
 }
