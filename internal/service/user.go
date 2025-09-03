@@ -7,10 +7,12 @@ import (
 	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
 	CreateToken(role model.UserRole) (string, error)
+	Register(email string, password string, role model.UserRole) (*model.User, error)
 }
 
 type userService struct {
@@ -34,4 +36,27 @@ func (uS *userService) CreateToken(role model.UserRole) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (uS *userService) Register(email string, password string, role model.UserRole) (*model.User, error) {
+	existingUser, err := uS.db.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingUser != nil {
+		return nil, nil
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token")
+	}
+
+	user, err := uS.db.CreateUser(email, string(hashedPassword), role)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
