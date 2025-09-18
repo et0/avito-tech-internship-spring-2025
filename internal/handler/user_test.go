@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type dummyLoginTestCase struct {
+type UserTestCase struct {
 	name           string
 	requestBody    interface{}
 	setupMock      func(MockUserService *mocks.MockUserService)
@@ -27,7 +27,7 @@ type dummyLoginTestCase struct {
 
 func TestDummyLogin_TableDriven(t *testing.T) {
 	// Подготовка тестовых случаев
-	testCases := []dummyLoginTestCase{
+	testCases := []UserTestCase{
 		{
 			name:        "success_employee_role",
 			requestBody: map[string]string{"role": "employee"},
