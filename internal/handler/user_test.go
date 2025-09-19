@@ -25,6 +25,89 @@ type UserTestCase struct {
 	expectError    bool
 }
 
+func TestRegister_TableDriven(t *testing.T) {
+	testCases := []UserTestCase{
+		{
+			name:           "empty_wrong_email",
+			requestBody:    map[string]string{"email": "", "password": "test", "role": "moderator"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Email is required and must be correct"},
+		},
+		{
+			name:           "empty_password",
+			requestBody:    map[string]string{"email": "test@test.com", "password": "", "role": "moderator"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Password is required"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			MockUserService := new(mocks.MockUserService)
+			tc.setupMock(MockUserService)
+
+			log := logging.New()
+
+			handler := handler.NewUserHandler(MockUserService, log)
+
+			// Создание HTTP запроса
+			var reqBody []byte
+			if tc.requestBody != nil {
+				if bodyStr, ok := tc.requestBody.(string); ok {
+					reqBody = []byte(bodyStr)
+				} else {
+					reqBody, _ = json.Marshal(tc.requestBody)
+				}
+			}
+
+			req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewReader(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			rec := httptest.NewRecorder()
+
+			e := echo.New()
+			c := e.NewContext(req, rec)
+
+			// Execution
+			err := handler.Register(c)
+
+			// Assertion
+			if tc.expectError {
+				assert.Error(t, err)
+				if httpErr, ok := err.(*echo.HTTPError); ok {
+					assert.Equal(t, tc.expectedStatus, httpErr.Code)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedStatus, rec.Code)
+
+				// Проверка тела ответа
+				var actualResponse map[string]interface{}
+				if len(rec.Body.Bytes()) > 0 {
+					err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+					assert.NoError(t, err)
+				}
+
+				// Для ожидаемого тела в формате map
+				if expectedMap, ok := tc.expectedBody.(map[string]string); ok {
+					for key, expectedValue := range expectedMap {
+						if actualValue, exists := actualResponse[key]; exists {
+							assert.Equal(t, expectedValue, actualValue)
+						} else {
+							assert.Fail(t, "Expected key not found in response: "+key)
+						}
+					}
+				}
+			}
+
+			// Verify mock expectations
+			MockUserService.AssertExpectations(t)
+		})
+	}
+}
+
 func TestDummyLogin_TableDriven(t *testing.T) {
 	// Подготовка тестовых случаев
 	testCases := []UserTestCase{
