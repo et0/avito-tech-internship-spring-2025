@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/service"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime/types"
 )
 
 type UserHandler struct {
@@ -60,11 +62,12 @@ func (u *UserHandler) Register(ctx echo.Context) error {
 	if err := ctx.Bind(&request); err != nil {
 		u.log.Error("handler.user.register", "error", err)
 
-		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
-	}
+		// Почта проверяется регулярным выражением и отлов пустого поля будет тут
+		if errors.Is(err, types.ErrValidationEmail) {
+			return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email is required and must be correct"})
+		}
 
-	if request.Email == "" {
-		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email is required"})
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
 	}
 
 	if request.Password == "" {
