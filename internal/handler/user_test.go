@@ -28,11 +28,25 @@ type UserTestCase struct {
 func TestRegister_TableDriven(t *testing.T) {
 	testCases := []UserTestCase{
 		{
-			name:           "empty_wrong_email",
-			requestBody:    map[string]string{"email": "", "password": "test", "role": "moderator"},
+			name:           "missing_email",
+			requestBody:    map[string]string{"password": "", "role": "moderator"},
 			setupMock:      func(MockUserService *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   map[string]string{"message": "Email is required and must be correct"},
+			expectedBody:   map[string]string{"message": "Email is required"},
+		},
+		{
+			name:           "missing_password",
+			requestBody:    map[string]string{"email": "test@test.com", "role": "moderator"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Password is required"},
+		},
+		{
+			name:           "missing_role",
+			requestBody:    map[string]string{"email": "test@test.com", "password": "test"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Role is required"},
 		},
 		{
 			name:           "empty_password",
@@ -40,6 +54,64 @@ func TestRegister_TableDriven(t *testing.T) {
 			setupMock:      func(MockUserService *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedBody:   map[string]string{"message": "Password is required"},
+		},
+		{
+			name:           "empty_role",
+			requestBody:    map[string]string{"email": "test@test.com", "password": "test", "role": ""},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Role is required"},
+		},
+		{
+			name:           "invalid_role",
+			requestBody:    map[string]string{"email": "test@test.com", "password": "test", "role": "admin"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Role must be 'employee' or 'moderator'"},
+		},
+		{
+			name:           "invalid_email",
+			requestBody:    map[string]string{"email": "test", "password": "test", "role": "moderator"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Email must be correct"},
+		},
+		{
+			name:           "invalid_json",
+			requestBody:    "invalid_json_string",
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Invalid request format"},
+		},
+		{
+			name:        "database_error",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test", "role": "moderator"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Register", "test@test.com", "test", model.RoleModerator).
+					Return(nil, fmt.Errorf("DB connect failed"))
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Failed to create user"},
+		},
+		{
+			name:        "email_already_exists",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test", "role": "moderator"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Register", "test@test.com", "test", model.RoleModerator).
+					Return(nil, nil)
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "User with this email already exists"},
+		},
+		{
+			name:        "successful_registration",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test", "role": "moderator"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Register", "test@test.com", "test", model.RoleModerator).
+					Return(&model.User{Email: "test@test.com", Role: model.RoleModerator}, nil)
+			},
+			expectedStatus: http.StatusCreated,
+			expectedBody:   map[string]string{"email": "test@test.com", "role": string(model.RoleModerator)},
 		},
 	}
 
