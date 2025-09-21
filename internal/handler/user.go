@@ -70,6 +70,10 @@ func (u *UserHandler) Register(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
 	}
 
+	if request.Email == "" {
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email is required"})
+	}
+
 	if request.Password == "" {
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Password is required"})
 	}
