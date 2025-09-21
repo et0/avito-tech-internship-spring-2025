@@ -1,4 +1,4 @@
-.PHONY: generate migrate-up migrate-down
+.PHONY: test generate migrate-up migrate-down
 generate:
 	@echo "Generating OpenAPI"
 
@@ -34,3 +34,6 @@ migration-down:
 		-path ./migrations \
 		-database $(MIGRATION_URI) \
 		down
+
+test:
+	go test ./internal/handler/... -v -cover
