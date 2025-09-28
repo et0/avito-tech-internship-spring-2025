@@ -1,8 +1,13 @@
 package handler
 
+import "log/slog"
+
 type PvzHandler struct {
+	log *slog.Logger
 }
 
-func NewPvzHandler() *PvzHandler {
-	return &PvzHandler{}
+func NewPvzHandler(log *slog.Logger) *PvzHandler {
+	return &PvzHandler{
+		log: log,
+	}
 }
