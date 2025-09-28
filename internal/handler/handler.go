@@ -19,9 +19,12 @@ func New(log *slog.Logger, db repository.Database, jwtSecret []byte) *echo.Echo 
 
 	// Handler
 	userHandler := NewUserHandler(userService, log)
+	pvzHandler := NewPvzHandler(log)
 
 	e.POST("/dummyLogin", userHandler.DummyLogin)
 	e.POST("/register", userHandler.Register)
+
+	e.POST("/pvz", pvzHandler.Create)
 
 	return e
 }
