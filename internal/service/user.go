@@ -13,6 +13,7 @@ import (
 type UserService interface {
 	CreateToken(role model.UserRole) (string, error)
 	Register(email string, password string, role model.UserRole) (*model.User, error)
+	Login(email string, password string) (string, error)
 }
 
 type userService struct {
@@ -59,4 +60,21 @@ func (uS *userService) Register(email string, password string, role model.UserRo
 	}
 
 	return user, nil
+}
+
+func (uS *userService) Login(email string, password string) (string, error) {
+	user, err := uS.db.FindByEmail(email)
+	if err != nil {
+		return "", err
+	}
+
+	if user == nil {
+		return "", fmt.Errorf("User not found")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return "", fmt.Errorf("Invalid credentials")
+	}
+
+	return uS.CreateToken(user.Role)
 }
