@@ -23,6 +23,7 @@ func New(log *slog.Logger, db repository.Database, jwtSecret []byte) *echo.Echo 
 
 	e.POST("/dummyLogin", userHandler.DummyLogin)
 	e.POST("/register", userHandler.Register)
+	e.POST("/login", userHandler.Login)
 
 	e.POST("/pvz", pvzHandler.Create)
 
