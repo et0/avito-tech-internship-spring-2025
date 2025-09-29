@@ -127,7 +127,9 @@ func (u *UserHandler) Login(ctx echo.Context) error {
 
 	token, err := u.service.Login(string(request.Email), request.Password)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: err.Error()})
+		u.log.Error("login", "error", err)
+
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Failed login"})
 	}
 
 	return ctx.JSON(http.StatusOK, UserLoginResponse{token})
