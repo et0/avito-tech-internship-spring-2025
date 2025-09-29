@@ -326,3 +326,147 @@ func TestDummyLogin_TableDriven(t *testing.T) {
 		})
 	}
 }
+
+func TestLogin_TableDriven(t *testing.T) {
+	testCases := []UserTestCase{
+		{
+			name:           "missing_email",
+			requestBody:    map[string]string{"password": ""},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Email is required"},
+		},
+		{
+			name:           "missing_password",
+			requestBody:    map[string]string{"email": "test@test.com"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Password is required"},
+		},
+		{
+			name:           "empty_password",
+			requestBody:    map[string]string{"email": "test@test.com", "password": ""},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Password is required"},
+		},
+		{
+			name:           "invalid_email",
+			requestBody:    map[string]string{"email": "test", "password": "test", "role": "moderator"},
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Email must be correct"},
+		},
+		{
+			name:           "invalid_json",
+			requestBody:    "invalid_json_string",
+			setupMock:      func(MockUserService *mocks.MockUserService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Invalid request format"},
+		},
+		{
+			name:        "database_error",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Login", "test@test.com", "test").
+					Return("", fmt.Errorf("DB connect failed"))
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Failed login"},
+		},
+		{
+			name:        "email_not_found",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Login", "test@test.com", "test").
+					Return("", fmt.Errorf("User not found"))
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Failed login"},
+		},
+		{
+			name:        "wrong_password",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test_wrong"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Login", "test@test.com", "test_wrong").
+					Return("", fmt.Errorf("Invalid credentials"))
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   map[string]string{"message": "Failed login"},
+		},
+		{
+			name:        "successful_login",
+			requestBody: map[string]string{"email": "test@test.com", "password": "test"},
+			setupMock: func(MockUserService *mocks.MockUserService) {
+				MockUserService.On("Login", "test@test.com", "test").
+					Return("correct_token", nil)
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   map[string]string{"token": "correct_token"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			MockUserService := new(mocks.MockUserService)
+			tc.setupMock(MockUserService)
+
+			log := logging.New()
+
+			handler := handler.NewUserHandler(MockUserService, log)
+
+			// Создание HTTP запроса
+			var reqBody []byte
+			if tc.requestBody != nil {
+				if bodyStr, ok := tc.requestBody.(string); ok {
+					reqBody = []byte(bodyStr)
+				} else {
+					reqBody, _ = json.Marshal(tc.requestBody)
+				}
+			}
+
+			req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewReader(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			rec := httptest.NewRecorder()
+
+			e := echo.New()
+			c := e.NewContext(req, rec)
+
+			// Execution
+			err := handler.Login(c)
+
+			// Assertion
+			if tc.expectError {
+				assert.Error(t, err)
+				if httpErr, ok := err.(*echo.HTTPError); ok {
+					assert.Equal(t, tc.expectedStatus, httpErr.Code)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedStatus, rec.Code)
+
+				// Проверка тела ответа
+				var actualResponse map[string]interface{}
+				if len(rec.Body.Bytes()) > 0 {
+					err := json.Unmarshal(rec.Body.Bytes(), &actualResponse)
+					assert.NoError(t, err)
+				}
+
+				// Для ожидаемого тела в формате map
+				if expectedMap, ok := tc.expectedBody.(map[string]string); ok {
+					for key, expectedValue := range expectedMap {
+						if actualValue, exists := actualResponse[key]; exists {
+							assert.Equal(t, expectedValue, actualValue)
+						} else {
+							assert.Fail(t, "Expected key not found in response: "+key)
+						}
+					}
+				}
+			}
+
+			// Verify mock expectations
+			MockUserService.AssertExpectations(t)
+		})
+	}
+}

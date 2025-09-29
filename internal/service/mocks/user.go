@@ -21,3 +21,8 @@ func (m *MockUserService) Register(email string, password string, role model.Use
 	}
 	return nil, args.Error(1)
 }
+
+func (m *MockUserService) Login(email string, password string) (string, error) {
+	args := m.Called(email, password)
+	return args.String(0), args.Error(1)
+}
