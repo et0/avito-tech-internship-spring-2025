@@ -26,6 +26,10 @@ type UserRegisterResponse struct {
 	Role  openapi.UserRole `json:"role"`
 }
 
+type UserLoginResponse struct {
+	Token openapi.Token `json:"token"`
+}
+
 func NewUserHandler(sUS service.UserService, log *slog.Logger) *UserHandler {
 	return &UserHandler{
 		service: sUS,
@@ -97,4 +101,34 @@ func (u *UserHandler) Register(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusCreated, UserRegisterResponse{Email: user.Email, Role: openapi.UserRole(user.Role)})
+}
+
+func (u *UserHandler) Login(ctx echo.Context) error {
+	var request openapi.PostLoginJSONRequestBody
+
+	if err := ctx.Bind(&request); err != nil {
+		u.log.Error("handler.user.login", "error", err)
+
+		// Почта проверяется регулярным выражением и отлов пустого поля будет тут
+		if errors.Is(err, types.ErrValidationEmail) {
+			return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email must be correct"})
+		}
+
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
+	}
+
+	if request.Email == "" {
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email is required"})
+	}
+
+	if request.Password == "" {
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Password is required"})
+	}
+
+	token, err := u.service.Login(string(request.Email), request.Password)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: err.Error()})
+	}
+
+	return ctx.JSON(http.StatusOK, UserLoginResponse{token})
 }
