@@ -65,8 +65,6 @@ func (u *UserHandler) Register(ctx echo.Context) error {
 	var request openapi.PostRegisterJSONRequestBody
 
 	if err := ctx.Bind(&request); err != nil {
-		u.log.Error("handler.user.register", "error", err)
-
 		// Почта проверяется регулярным выражением и отлов пустого поля будет тут
 		if deferr.Is(err, types.ErrValidationEmail) {
 			return errors.InvalidEmail()
@@ -93,8 +91,6 @@ func (u *UserHandler) Register(ctx echo.Context) error {
 
 	user, err := u.service.Register(string(request.Email), request.Password, model.UserRole(request.Role))
 	if err != nil {
-		u.log.Error("register", "error", err)
-
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Failed to create user"})
 	}
 	if user == nil {
@@ -108,8 +104,6 @@ func (u *UserHandler) Login(ctx echo.Context) error {
 	var request openapi.PostLoginJSONRequestBody
 
 	if err := ctx.Bind(&request); err != nil {
-		u.log.Error("handler.user.login", "error", err)
-
 		// Почта проверяется регулярным выражением и отлов пустого поля будет тут
 		if deferr.Is(err, types.ErrValidationEmail) {
 			return errors.InvalidEmail()
@@ -128,8 +122,6 @@ func (u *UserHandler) Login(ctx echo.Context) error {
 
 	token, err := u.service.Login(string(request.Email), request.Password)
 	if err != nil {
-		u.log.Error("login", "error", err)
-
 		return ctx.JSON(http.StatusUnauthorized, openapi.Error{Message: "Failed login"})
 	}
 
