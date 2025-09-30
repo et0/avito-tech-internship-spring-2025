@@ -2,7 +2,6 @@ package handler
 
 import (
 	deferr "errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/et0/avito-tech-internship-spring-2025/api/gen/openapi"
@@ -15,7 +14,6 @@ import (
 
 type UserHandler struct {
 	service service.UserService
-	log     *slog.Logger
 }
 
 type UserDummyLoginResponse struct {
@@ -31,10 +29,9 @@ type UserLoginResponse struct {
 	Token openapi.Token `json:"token"`
 }
 
-func NewUserHandler(sUS service.UserService, log *slog.Logger) *UserHandler {
+func NewUserHandler(sUS service.UserService) *UserHandler {
 	return &UserHandler{
 		service: sUS,
-		log:     log,
 	}
 }
 

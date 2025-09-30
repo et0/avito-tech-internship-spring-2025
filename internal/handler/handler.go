@@ -20,7 +20,7 @@ func New(log *slog.Logger, db repository.Database, jwtSecret []byte) *echo.Echo 
 	userService := service.NewUserService(db, jwtSecret)
 
 	// Handler
-	userHandler := NewUserHandler(userService, log)
+	userHandler := NewUserHandler(userService)
 	pvzHandler := NewPvzHandler(log)
 
 	e.POST("/dummyLogin", userHandler.DummyLogin)

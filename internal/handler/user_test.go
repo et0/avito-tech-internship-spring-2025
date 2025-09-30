@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/et0/avito-tech-internship-spring-2025/internal/handler"
-	"github.com/et0/avito-tech-internship-spring-2025/internal/logging"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/service/mocks"
 	"github.com/labstack/echo/v4"
@@ -120,9 +119,7 @@ func TestRegister_TableDriven(t *testing.T) {
 			MockUserService := new(mocks.MockUserService)
 			tc.setupMock(MockUserService)
 
-			log := logging.New()
-
-			handler := handler.NewUserHandler(MockUserService, log)
+			handler := handler.NewUserHandler(MockUserService)
 
 			// Создание HTTP запроса
 			var reqBody []byte
@@ -267,9 +264,7 @@ func TestDummyLogin_TableDriven(t *testing.T) {
 			MockUserService := new(mocks.MockUserService)
 			tc.setupMock(MockUserService)
 
-			log := logging.New()
-
-			handler := handler.NewUserHandler(MockUserService, log)
+			handler := handler.NewUserHandler(MockUserService)
 
 			// Создание HTTP запроса
 			var reqBody []byte
@@ -411,9 +406,7 @@ func TestLogin_TableDriven(t *testing.T) {
 			MockUserService := new(mocks.MockUserService)
 			tc.setupMock(MockUserService)
 
-			log := logging.New()
-
-			handler := handler.NewUserHandler(MockUserService, log)
+			handler := handler.NewUserHandler(MockUserService)
 
 			// Создание HTTP запроса
 			var reqBody []byte
