@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"errors"
+	deferr "errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/et0/avito-tech-internship-spring-2025/api/gen/openapi"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/service"
+	"github.com/et0/avito-tech-internship-spring-2025/pkg/errors"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime/types"
 )
@@ -67,8 +68,8 @@ func (u *UserHandler) Register(ctx echo.Context) error {
 		u.log.Error("handler.user.register", "error", err)
 
 		// Почта проверяется регулярным выражением и отлов пустого поля будет тут
-		if errors.Is(err, types.ErrValidationEmail) {
-			return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email must be correct"})
+		if deferr.Is(err, types.ErrValidationEmail) {
+			return errors.InvalidEmail()
 		}
 
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
@@ -110,8 +111,8 @@ func (u *UserHandler) Login(ctx echo.Context) error {
 		u.log.Error("handler.user.login", "error", err)
 
 		// Почта проверяется регулярным выражением и отлов пустого поля будет тут
-		if errors.Is(err, types.ErrValidationEmail) {
-			return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Email must be correct"})
+		if deferr.Is(err, types.ErrValidationEmail) {
+			return errors.InvalidEmail()
 		}
 
 		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Invalid request format"})
