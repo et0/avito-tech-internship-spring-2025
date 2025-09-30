@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/et0/avito-tech-internship-spring-2025/pkg/errors"
 	"github.com/labstack/echo/v4"
 )
 
@@ -16,7 +17,7 @@ func Logging(log *slog.Logger) echo.MiddlewareFunc {
 
 			err := next(c)
 
-			logRequest(c, log, requestBody)
+			logRequest(c, log, requestBody, err)
 
 			return err
 		}
@@ -42,8 +43,20 @@ func getRequestBody(c echo.Context) []byte {
 	return requestBody
 }
 
-func logRequest(c echo.Context, log *slog.Logger, requestBody []byte) {
+func logRequest(c echo.Context, log *slog.Logger, requestBody []byte, err error) {
 	status := c.Response().Status
+
+	// Если есть ошибка, а код ответа по прежнему 200
+	if err != nil && status == 200 {
+		switch e := err.(type) {
+		case *errors.AppError:
+			status = e.Code
+		case *echo.HTTPError:
+			status = e.Code
+		default:
+			status = 500
+		}
+	}
 
 	logArgs := []any{
 		"status", status,
@@ -54,6 +67,10 @@ func logRequest(c echo.Context, log *slog.Logger, requestBody []byte) {
 		"ip", c.RealIP(),
 		"duration", time.Since(time.Now()).Milliseconds(),
 		"duration_human", time.Since(time.Now()).String(),
+	}
+
+	if err != nil {
+		logArgs = append(logArgs, "error", err.Error())
 	}
 
 	switch {
