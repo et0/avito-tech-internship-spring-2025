@@ -129,7 +129,7 @@ func (u *UserHandler) Login(ctx echo.Context) error {
 	if err != nil {
 		u.log.Error("login", "error", err)
 
-		return ctx.JSON(http.StatusBadRequest, openapi.Error{Message: "Failed login"})
+		return ctx.JSON(http.StatusUnauthorized, openapi.Error{Message: "Failed login"})
 	}
 
 	return ctx.JSON(http.StatusOK, UserLoginResponse{token})

@@ -371,7 +371,7 @@ func TestLogin_TableDriven(t *testing.T) {
 				MockUserService.On("Login", "test@test.com", "test").
 					Return("", fmt.Errorf("DB connect failed"))
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   map[string]string{"message": "Failed login"},
 		},
 		{
@@ -381,7 +381,7 @@ func TestLogin_TableDriven(t *testing.T) {
 				MockUserService.On("Login", "test@test.com", "test").
 					Return("", fmt.Errorf("User not found"))
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   map[string]string{"message": "Failed login"},
 		},
 		{
@@ -391,7 +391,7 @@ func TestLogin_TableDriven(t *testing.T) {
 				MockUserService.On("Login", "test@test.com", "test_wrong").
 					Return("", fmt.Errorf("Invalid credentials"))
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   map[string]string{"message": "Failed login"},
 		},
 		{
