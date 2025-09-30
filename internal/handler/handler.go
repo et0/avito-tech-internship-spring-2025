@@ -14,6 +14,8 @@ func New(log *slog.Logger, db repository.Database, jwtSecret []byte) *echo.Echo 
 
 	e.Use(middleware.Logging(log))
 
+	e.HTTPErrorHandler = middleware.ErrorHandler(log)
+
 	// Service
 	userService := service.NewUserService(db, jwtSecret)
 
