@@ -11,6 +11,7 @@ import (
 	"github.com/et0/avito-tech-internship-spring-2025/internal/handler"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/model"
 	"github.com/et0/avito-tech-internship-spring-2025/internal/service/mocks"
+	"github.com/et0/avito-tech-internship-spring-2025/pkg/errors"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -73,7 +74,8 @@ func TestRegister_TableDriven(t *testing.T) {
 			requestBody:    map[string]string{"email": "test", "password": "test", "role": "moderator"},
 			setupMock:      func(MockUserService *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   map[string]string{"message": "Email must be correct"},
+			expectedBody:   map[string]string{"message": errors.MessageInvalidEmail},
+			expectError:    true,
 		},
 		{
 			name:           "invalid_json",
@@ -147,6 +149,12 @@ func TestRegister_TableDriven(t *testing.T) {
 				assert.Error(t, err)
 				if httpErr, ok := err.(*echo.HTTPError); ok {
 					assert.Equal(t, tc.expectedStatus, httpErr.Code)
+				} else if appErr, ok := err.(*errors.AppError); ok {
+					assert.Equal(t, tc.expectedStatus, appErr.Code)
+
+					if tc.expectedBody != nil {
+						assert.Contains(t, appErr.Message, tc.expectedBody.(map[string]string)["message"])
+					}
 				}
 			} else {
 				assert.NoError(t, err)
@@ -350,7 +358,8 @@ func TestLogin_TableDriven(t *testing.T) {
 			requestBody:    map[string]string{"email": "test", "password": "test", "role": "moderator"},
 			setupMock:      func(MockUserService *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   map[string]string{"message": "Email must be correct"},
+			expectedBody:   map[string]string{"message": errors.MessageInvalidEmail},
+			expectError:    true,
 		},
 		{
 			name:           "invalid_json",
@@ -434,6 +443,12 @@ func TestLogin_TableDriven(t *testing.T) {
 				assert.Error(t, err)
 				if httpErr, ok := err.(*echo.HTTPError); ok {
 					assert.Equal(t, tc.expectedStatus, httpErr.Code)
+				} else if appErr, ok := err.(*errors.AppError); ok {
+					assert.Equal(t, tc.expectedStatus, appErr.Code)
+
+					if tc.expectedBody != nil {
+						assert.Contains(t, appErr.Message, tc.expectedBody.(map[string]string)["message"])
+					}
 				}
 			} else {
 				assert.NoError(t, err)
